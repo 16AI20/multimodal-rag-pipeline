@@ -1,4 +1,4 @@
-# General RAG Pipeline System
+# Multimodal RAG Pipeline
 
 ## Project Overview
 
