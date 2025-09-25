@@ -1,0 +1,14 @@
+# @package prompts
+# Concise RAG prompt template
+
+rag_template: |
+  Answer this question concisely using the provided context.
+  
+  Context: {context}
+  Question: {question}
+  
+  Brief Answer:
+
+input_variables:
+  - "context"
+  - "question"

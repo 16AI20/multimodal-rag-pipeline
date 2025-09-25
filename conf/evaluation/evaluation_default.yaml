@@ -1,0 +1,58 @@
+# @package evaluation
+# Evaluation configuration for RAG system assessment
+
+# Semantic similarity model for BLEU/ROUGE evaluation
+similarity_model: "all-MiniLM-L6-v2"  # Fast, good quality for general content
+
+# Alternative models (uncomment to use)
+# similarity_model: "all-mpnet-base-v2"      # More accurate but slower
+# similarity_model: "all-roberta-large-v1"   # Best quality, slowest
+# similarity_model: "paraphrase-multilingual-MiniLM-L12-v2"  # Multilingual
+
+# Performance test questions for response time evaluation
+performance_test_questions:
+  - "What is this about?"
+  - "How does this work?"
+  - "What are the requirements?"
+  - "What are the key features?"
+  - "How do I get started?"
+
+# Evaluation score thresholds for automated recommendations
+thresholds:
+  # ROUGE-L F1 score thresholds
+  excellent_rouge_l: 0.5    # Excellent alignment with references
+  moderate_rouge_l: 0.3     # Moderate alignment
+  poor_rouge_l: 0.2         # Poor alignment threshold
+  
+  # Semantic similarity thresholds  
+  excellent_semantic: 0.7   # Very similar meaning
+  moderate_semantic: 0.5    # Moderate semantic overlap
+  poor_semantic: 0.3        # Different meanings
+  
+  # BLEU score thresholds
+  excellent_bleu: 0.4       # Good exact phrase matching
+  moderate_bleu: 0.2        # Some phrase overlap
+  
+  # Response time thresholds (seconds)
+  fast_response: 2.0        # Fast response time
+  acceptable_response: 5.0  # Acceptable response time
+  slow_response: 10.0       # Slow response threshold
+
+# Evaluation report settings
+reporting:
+  generate_individual_results: true    # Include per-question breakdowns
+  include_answer_comparisons: true     # Show side-by-side answer comparisons
+  recommendation_detail_level: "detailed"  # "brief", "detailed", "comprehensive"
+  
+# BLEU/ROUGE calculation settings
+metrics:
+  smoothing_function: "method1"       # NLTK smoothing: method1, method2, method3, method4
+  use_stemmer: true                   # ROUGE stemming for word variations
+  rouge_types: ["rouge1", "rouge2", "rougeL"]  # Which ROUGE metrics to calculate
+  
+# Advanced evaluation settings
+advanced:
+  enable_caching: false               # Cache embeddings for repeated evaluations
+  batch_similarity: true              # Batch process similarity calculations
+  error_handling: "graceful"          # "strict" or "graceful" error handling
+  max_retries: 3                      # Max retries for failed evaluations

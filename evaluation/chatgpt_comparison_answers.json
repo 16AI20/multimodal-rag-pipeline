@@ -1,0 +1,35 @@
+{
+  "evaluation_name": "Generic RAG System - ChatGPT Comparison",
+  "description": "Compare RAG system responses with ChatGPT responses",
+  "chatgpt_prompt_template": "You are an AI assistant helping with questions about a document-based RAG system. Use the following context to answer the question accurately and concisely in 1-2 sentences.\n\nContext: {context}\n\nQuestion: {question}\n\nAnswer:",
+  "instructions": [
+    "1. Replace questions with your domain-specific content",
+    "2. Provide relevant context from your document corpus to ChatGPT using the prompt template above",
+    "3. Get ChatGPT's response and fill in the 'chatgpt_answer' field",
+    "4. The evaluation script will automatically get the RAG system's response",
+    "5. Both responses will be compared for quality, accuracy, and relevance"
+  ],
+  "questions": [
+    {
+      "id": 1,
+      "category": "system_overview",
+      "question": "What is this RAG system designed for?",
+      "context_hint": "Use content from system documentation",
+      "chatgpt_answer": "This RAG system is designed to process document collections and provide accurate, context-based answers by retrieving relevant information from the corpus and generating responses using language models.",
+      "notes": "Compare how well each system explains the system's purpose"
+    },
+    {
+      "id": 2,
+      "category": "functionality",
+      "question": "What document types does the system support?",
+      "context_hint": "Use content from technical documentation about supported formats",
+      "chatgpt_answer": "The system supports various document formats including HTML, PDF, Word documents, CSV files, audio files, and images, with specialized processing for each format to extract and embed content effectively.",
+      "notes": "Compare feature coverage explanation"
+    }
+  ],
+  "evaluation_guidelines": [
+    "1. Replace with domain-specific questions relevant to your corpus",
+    "2. Ensure ChatGPT responses are generated with same context available to RAG system",
+    "3. Focus on functional capabilities rather than specific content knowledge"
+  ]
+}

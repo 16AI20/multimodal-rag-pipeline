@@ -1,0 +1,127 @@
+# @package evaluation
+# RAGAS (RAG Assessment) evaluation configuration
+
+# Enable RAGAS evaluation
+enabled: true
+
+# RAGAS evaluation metrics to compute
+metrics:
+  faithfulness: true          # Measures how grounded the answer is in retrieved context
+  answer_relevancy: true      # Measures how relevant the answer is to the question
+  context_precision: true     # Measures signal-to-noise ratio in retrieved contexts
+  context_recall: true        # Measures how well retrieval captures relevant information
+  answer_similarity: false    # Optional: semantic similarity to ground truth (requires reference answers)
+  answer_correctness: false   # Optional: factual correctness (requires reference answers)
+
+# Model configurations for RAGAS evaluation
+models:
+  # Embedding model for semantic similarity calculations
+  embedding_model: "BAAI/bge-large-en-v1.5"  # Should match main system embedding model
+  
+  # LLM for faithfulness and relevancy assessment
+  # Options: "ollama", "openai", "huggingface"
+  llm_provider: "ollama"
+  llm_model: "llama3.1:8b"    # Should match main system LLM
+  
+  # Alternative models (uncomment to use)
+  # llm_provider: "openai"
+  # llm_model: "gpt-3.5-turbo"
+  
+  # llm_provider: "huggingface" 
+  # llm_model: "microsoft/DialoGPT-large"
+
+# Evaluation settings
+evaluation:
+  # Batch size for processing multiple examples
+  batch_size: 5
+  
+  # Maximum number of examples to evaluate (set to null for all)
+  max_examples: null
+  
+  # Timeout for individual metric computation (seconds)
+  timeout: 60
+  
+  # Number of retries for failed evaluations
+  max_retries: 2
+  
+  # Enable async evaluation for better performance
+  async_evaluation: true
+
+# Score thresholds for automated assessment
+thresholds:
+  # Faithfulness thresholds (0-1)
+  excellent_faithfulness: 0.8    # Highly grounded in context
+  good_faithfulness: 0.6         # Reasonably grounded
+  poor_faithfulness: 0.4         # Poorly grounded
+  
+  # Answer relevancy thresholds (0-1)  
+  excellent_relevancy: 0.8       # Highly relevant to question
+  good_relevancy: 0.6            # Moderately relevant
+  poor_relevancy: 0.4            # Not very relevant
+  
+  # Context precision thresholds (0-1)
+  excellent_precision: 0.8       # High signal-to-noise ratio
+  good_precision: 0.6            # Moderate precision
+  poor_precision: 0.4            # Low precision
+  
+  # Context recall thresholds (0-1)
+  excellent_recall: 0.8          # Captures most relevant information
+  good_recall: 0.6               # Captures some relevant information  
+  poor_recall: 0.4               # Misses important information
+
+# Data format and processing
+data:
+  # Required fields mapping from RAG pipeline output
+  question_field: "question"      # Field containing the question
+  answer_field: "answer"          # Field containing generated answer
+  contexts_field: "contexts"      # Field containing retrieved contexts
+  ground_truth_field: "ground_truth"  # Optional: field containing reference answer
+  
+  # Context processing
+  max_context_length: 2000       # Maximum characters per context
+  context_separator: "\n\n"      # Separator for multiple contexts
+  
+  # Answer processing
+  max_answer_length: 1000        # Maximum characters in answer
+
+# Reporting configuration
+reporting:
+  # Include individual metric scores in reports
+  include_individual_scores: true
+  
+  # Include detailed explanations for scores
+  include_explanations: true
+  
+  # Generate metric distribution plots
+  generate_plots: false
+  
+  # Export results format ("json", "csv", "both")
+  export_format: "json"
+  
+  # Comparison with existing metrics
+  compare_with_traditional: true
+
+# Advanced settings
+advanced:
+  # Enable metric caching for repeated evaluations
+  enable_caching: true
+  
+  # Cache directory for RAGAS computations
+  cache_dir: ".ragas_cache"
+  
+  # Seed for reproducible results
+  random_seed: 42
+  
+  # Log level for RAGAS operations ("DEBUG", "INFO", "WARNING", "ERROR")
+  log_level: "INFO"
+  
+  # Custom prompt templates (optional)
+  custom_prompts:
+    faithfulness_prompt: null
+    relevancy_prompt: null
+    
+  # Fallback behavior when RAGAS unavailable
+  fallback_on_error: true
+  
+  # Skip RAGAS if traditional metrics are sufficient
+  skip_if_traditional_available: false

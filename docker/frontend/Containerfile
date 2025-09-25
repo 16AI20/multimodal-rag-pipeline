@@ -1,0 +1,48 @@
+# Frontend Streamlit Service Containerfile
+# This container runs the Streamlit web interface
+
+FROM python:3.12.2-slim-bookworm
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies including uv
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install uv package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Copy project files for uv
+COPY pyproject.toml ./
+COPY uv.lock ./uv.lock
+
+# Install dependencies with uv (web extras only)
+RUN uv sync --extra web --no-dev
+
+# Copy only necessary source code for frontend
+COPY src/interfaces/streamlit_app.py ./src/interfaces/
+COPY src/utils/ ./src/utils/
+COPY src/__init__.py ./src/
+COPY src/interfaces/__init__.py ./src/interfaces/
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV TOKENIZERS_PARALLELISM=false
+ENV BACKEND_URL=http://host.docker.internal:8000
+
+# Copy Streamlit configuration with theme
+COPY .streamlit/ /root/.streamlit/
+
+# Expose Streamlit port
+EXPOSE 8501
+
+# Use ENTRYPOINT for the main command
+ENTRYPOINT ["streamlit", "run", "src/interfaces/streamlit_app.py"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8501/_stcore/health || exit 1

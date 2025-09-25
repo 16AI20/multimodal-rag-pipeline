@@ -1,0 +1,256 @@
+llm:
+  provider: ollama
+  model: llama3.1:8b
+  base_url: http://localhost:11434
+  temperature: 0.2
+  max_tokens: 832
+  top_p: 0.8
+embeddings:
+  model: BAAI/bge-large-en-v1.5
+  device: mps
+  reranking_enabled: false
+  reranking_model: cross-encoder/ms-marco-MiniLM-L-6-v2
+  reranking_top_k: 15
+prompts:
+  rag_template: 'You are an AI assistant helping answer questions based on the provided
+    documents and related topics.
+
+
+    Use the following context information to answer the question. If the context doesn''t
+    contain enough information to answer the question, say so clearly.
+
+
+    Context:
+
+    {context}
+
+
+    Question: {question}
+
+
+    Answer: Provide a clear, informative answer based on the context above. Include
+    relevant details.
+
+    '
+  input_variables:
+  - context
+  - question
+vectordb:
+  path: vector_store
+  collection_name: rag_collection
+observability:
+  enabled: false
+  host: http://localhost:3000
+  public_key: ''
+  secret_key: ''
+  tracking:
+    queries: true
+    retrievals: true
+    generations: true
+    embeddings: true
+    errors: true
+    track_tokens: true
+    track_latency: true
+    track_costs: true
+    session_tracking: true
+    user_feedback: true
+  sampling:
+    enabled: false
+    rate: 1.0
+  tags:
+    project: rag-system
+    environment: development
+    version: 1.0.0
+  advanced:
+    batch_size: 10
+    flush_interval: 5
+    max_retries: 3
+    timeout: 10
+    debug: false
+    filter_pii: true
+  metrics:
+    retrieval_precision: true
+    retrieval_recall: true
+    mrr: true
+    response_length: true
+    response_time: true
+    token_usage: true
+    semantic_similarity: true
+    sentiment_score: false
+    safety_score: true
+  rag_specific:
+    track_question_categories: true
+    track_source_distribution: true
+    track_technical_accuracy: true
+    categories:
+    - program_basics
+    - eligibility
+    - fees_cost
+    - curriculum
+    - projects
+    - job_outcomes
+    - preparation
+    - technical_assessment
+    - duration_commitment
+    - dropout_policy
+optuna:
+  enabled: true
+  study:
+    study_name: rag_optimization
+    direction: maximize
+    storage: sqlite:///hyperparameter_studies.db
+    load_if_exists: true
+    multi_objective: false
+    objectives:
+    - name: rouge_l_score
+      direction: maximize
+      weight: 0.4
+    - name: semantic_similarity
+      direction: maximize
+      weight: 0.4
+    - name: response_time
+      direction: minimize
+      weight: 0.2
+  trials:
+    n_trials: 50
+    timeout: 3600
+    n_jobs: 1
+    pruning:
+      enabled: true
+      patience: 10
+  parameters:
+    retrieval:
+      k:
+        type: int
+        low: 3
+        high: 15
+        step: 1
+      chunk_size_pdf:
+        type: int
+        low: 500
+        high: 2000
+        step: 100
+      chunk_size_html:
+        type: int
+        low: 800
+        high: 2500
+        step: 100
+      chunk_overlap:
+        type: int
+        low: 50
+        high: 200
+        step: 25
+      similarity_threshold:
+        type: float
+        low: 0.0
+        high: 0.8
+        step: 0.1
+      reranking_enabled:
+        type: categorical
+        choices:
+        - true
+        - false
+      reranking_top_k:
+        type: int
+        low: 10
+        high: 30
+        step: 5
+        condition: reranking_enabled == true
+    generation:
+      temperature:
+        type: float
+        low: 0.1
+        high: 1.0
+        step: 0.1
+      max_tokens:
+        type: int
+        low: 256
+        high: 1024
+        step: 64
+      top_p:
+        type: float
+        low: 0.8
+        high: 0.95
+        step: 0.05
+  evaluation:
+    methods:
+      bleu_rouge: true
+      chatgpt_comparison: true
+      response_time: true
+    bleu_rouge_file: evaluation/bleu_rouge_answers.json
+    chatgpt_file: evaluation/chatgpt_comparison_answers.json
+    objective_weights:
+      rouge_l_f1: 0.3
+      bleu_score: 0.2
+      semantic_similarity: 0.3
+      response_time_penalty: 0.2
+    constraints:
+      max_response_time: 30.0
+      min_rouge_score: 0.1
+      min_bleu_score: 0.05
+  advanced:
+    question_subset: null
+    cache_embeddings: true
+    cache_retrievals: true
+    log_level: INFO
+    save_failed_trials: true
+    early_stopping:
+      enabled: true
+      patience: 15
+      min_improvement: 0.01
+  results:
+    output_dir: hyperparameter_results
+    export_best_config: true
+    config_output_path: conf/tuned_config.yaml
+    generate_plots: true
+    plot_formats:
+    - png
+    - html
+    generate_report: true
+    report_format: markdown
+  fixed_parameters:
+    device: mps
+    seed: 42
+    llm_provider: ollama
+    llm_model: llama3.1:8b
+    embedding_model: BAAI/bge-large-en-v1.5
+device: mps
+seed: 42
+document_processing:
+  resource_dirs:
+    html: corpus/html
+    pdf: corpus/pdf
+    docx: corpus/docx
+    csv: corpus/csv
+    audio: corpus/audio
+    images: corpus/images
+  chunk_sizes:
+    pdf: 1100
+    docx: 800
+    html: 1700
+    csv: 400
+    audio: 600
+  content_enhancement:
+    pdf:
+      include_headings: true
+      include_page_context: true
+      min_content_length: 100
+    csv:
+      max_content_length: 300
+      require_meaningful_content: true
+    html:
+      preserve_structure: true
+      include_metadata: true
+  audio:
+    whisper_model: medium
+    segmentation_method: smart
+    min_segment_length: 5
+    max_segment_length: 45
+    post_process_transcript: true
+    remove_filler_words: true
+  query_preprocessing:
+    expand_acronyms: true
+    normalize_text: true
+    boost_document_terms: true
+  chunk_overlap: 50
+retrieval_k: 8

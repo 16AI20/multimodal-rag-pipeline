@@ -1,0 +1,59 @@
+# Backend API Service Containerfile
+# This container runs the FastAPI backend for serving RAG queries
+
+FROM python:3.12.2-slim-bookworm
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies including uv
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install uv package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Copy project files for uv
+COPY pyproject.toml ./
+COPY uv.lock ./uv.lock
+
+# Install dependencies with uv (backend + web extras)
+RUN uv sync --extra backend --extra web --no-dev
+
+# Copy necessary source code for backend
+COPY src/__init__.py ./src/
+COPY src/interfaces/ ./src/interfaces/
+COPY src/rag/ ./src/rag/
+COPY src/api/ ./src/api/
+COPY src/utils/ ./src/utils/
+COPY src/observability/ ./src/observability/
+
+# Copy configuration
+COPY conf/ ./conf/
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV TOKENIZERS_PARALLELISM=false
+ENV PYTORCH_ENABLE_MPS_FALLBACK=1
+ENV FORCE_CPU_DEVICE=true
+# Ollama URL can be overridden at runtime for different container engines
+ENV OLLAMA_BASE_URL=http://localhost:11434
+
+# Create directories
+RUN mkdir -p /app/vector_store /app/logs
+
+# Set volumes for data access
+VOLUME ["/app/vector_store", "/app/logs"]
+
+# Expose FastAPI port
+EXPOSE 8000
+
+# Use ENTRYPOINT for the main command
+ENTRYPOINT ["uvicorn", "src.interfaces.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1

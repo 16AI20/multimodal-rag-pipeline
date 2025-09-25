@@ -1,0 +1,18 @@
+[theme]
+# Primary colors
+primaryColor = "#FF6B6B"  # Coral red for accent elements
+backgroundColor = "#0E1117"  # Dark background
+secondaryBackgroundColor = "#1E1E1E"  # Slightly lighter for cards/panels
+textColor = "#FAFAFA"  # Off-white text
+
+# Layout configuration
+base = "dark"  # Use dark theme base
+
+[server]
+# Server configuration
+headless = true
+port = 8501
+
+[browser]
+# Browser configuration
+gatherUsageStats = false

@@ -1,0 +1,5 @@
+# @package vectordb
+# ChromaDB default configuration
+
+path: "vector_store"
+collection_name: "rag_collection"

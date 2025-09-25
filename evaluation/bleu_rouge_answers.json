@@ -1,0 +1,33 @@
+{
+  "evaluation_name": "Generic RAG System - BLEU/ROUGE Evaluation",
+  "description": "Reference answers for evaluating RAG system performance",
+  "instructions": "This file contains sample questions and reference answers for evaluating the RAG system. Replace with your domain-specific questions and answers.",
+  "questions": [
+    {
+      "id": 1,
+      "category": "system_overview",
+      "question": "What is this RAG system designed for?",
+      "reference_answer": "This is a Retrieval-Augmented Generation (RAG) system designed to process multimodal documents and provide accurate, contextual responses based on the uploaded corpus. It supports various document formats including HTML, PDF, DOCX, audio, and images.",
+      "notes": "Should cover system purpose and capabilities"
+    },
+    {
+      "id": 2,
+      "category": "functionality",
+      "question": "What document types does the system support?",
+      "reference_answer": "The system supports multiple document formats including HTML documents, PDF files, Word documents (DOCX), CSV files, audio files (MP3, WAV), and images (JPG, PNG). Each format has specialized processing to extract and embed content effectively.",
+      "notes": "Should mention multimodal capabilities"
+    },
+    {
+      "id": 3,
+      "category": "system_features",
+      "question": "What are the key features of this RAG pipeline?",
+      "reference_answer": "Key features include modular configuration management, comprehensive evaluation framework, hyperparameter tuning with Optuna, observability with Langfuse, streaming responses, cross-encoder reranking, and complete local deployment without external API dependencies.",
+      "notes": "Should highlight main system capabilities"
+    }
+  ],
+  "evaluation_guidelines": [
+    "1. Reference answers should be factual and based on system documentation",
+    "2. Keep answers concise (1-2 sentences) for consistent evaluation",
+    "3. Focus on system capabilities rather than domain-specific content"
+  ]
+}

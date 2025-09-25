@@ -1,0 +1,19 @@
+# Production monitoring and observability dependencies
+# Install with: pip install -r requirements/requirements-monitoring.txt
+
+# Prometheus metrics collection
+prometheus-client>=0.17.0
+
+# System metrics monitoring
+psutil>=5.9.0
+
+# Enhanced validation
+pydantic>=2.0.0
+
+# Async utilities
+aiofiles>=23.0.0
+
+# Optional: External monitoring integrations
+# sentry-sdk>=1.32.0  # Error tracking and performance monitoring
+# datadog>=0.44.0     # Application performance monitoring
+# newrelic>=8.0.0     # Application monitoring platform

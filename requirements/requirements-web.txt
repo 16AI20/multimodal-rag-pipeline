@@ -1,0 +1,18 @@
+# Web services dependencies (for backend and frontend)
+-r requirements.txt
+
+# LLM integration for backend
+langchain-ollama>=0.1.0
+
+# Backend web framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+python-multipart>=0.0.6
+
+# Frontend framework
+streamlit>=1.28.0
+plotly>=5.15.0
+pandas>=1.5.0
+
+# ML models (lightweight for inference only)
+transformers>=4.30.0

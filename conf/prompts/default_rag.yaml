@@ -1,0 +1,19 @@
+# @package prompts
+# Default RAG prompt template configuration
+
+rag_template: |
+  You are an AI assistant helping answer questions based on the provided document context.
+
+  Use the following context information to answer the question. If the context doesn't contain enough information to answer the question, say so clearly.
+
+  Context:
+  {context}
+
+  Question: {question}
+
+  Answer: Provide a clear, informative answer based on the context above. Include relevant details.
+
+# Input variables for the template
+input_variables:
+  - "context"
+  - "question"

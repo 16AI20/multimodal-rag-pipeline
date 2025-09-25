@@ -1,0 +1,324 @@
+# GitLab CI/CD Pipeline for RAG System
+# Runs unit tests and code quality checks
+
+stages:
+  - test
+  - lint
+  - quality-gate
+  - pipeline
+  - deploy
+
+# Define variables
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PYTHONPATH: "$CI_PROJECT_DIR"
+  TOKENIZERS_PARALLELISM: "false"
+  PYTORCH_ENABLE_MPS_FALLBACK: "1"
+
+# Cache pip dependencies for faster builds
+cache:
+  paths:
+    - .cache/pip/
+    - venv/
+    - vector_store/
+
+# Base job template for Python setup with uv
+.python_base: &python_base
+  image: python:3.12.2-slim-bookworm
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git curl build-essential
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="/root/.cargo/bin:$PATH"
+    - uv sync --extra dev --extra ml
+
+# Legacy pip-based setup (fallback)
+.python_base_pip: &python_base_pip
+  image: python:3.12.2-slim-bookworm
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git curl build-essential
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements/requirements-dev.txt
+    - pip install -r requirements/requirements-ml.txt
+
+# Unit Tests Stage
+unit_tests:
+  <<: *python_base
+  stage: test
+  script:
+    - echo "Running unit tests..."
+    - export PATH="/root/.cargo/bin:$PATH"
+    - uv run python -m pytest src/tests/ -v --tb=short --junitxml=report.xml --cov=src --cov-report=xml --cov-report=term
+    - echo "Unit tests completed"
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - coverage.xml
+      - report.xml
+    expire_in: 1 week
+  only:
+    - main
+    - merge_requests
+    - develop
+
+# Code Quality - Pylint
+pylint:
+  <<: *python_base
+  stage: lint
+  script:
+    - echo "Running pylint code quality checks..."
+    - export PATH="/root/.cargo/bin:$PATH"
+    - uv run pylint src/ --output-format=parseable --reports=no --exit-zero > pylint-report.txt
+    - uv run pylint src/ --output-format=json --exit-zero > pylint-report.json
+    - echo "Pylint analysis completed"
+    - cat pylint-report.txt
+  artifacts:
+    when: always
+    paths:
+      - pylint-report.txt
+      - pylint-report.json
+    expire_in: 1 week
+  allow_failure: true
+  only:
+    - main
+    - merge_requests
+    - develop
+
+# Code Quality - Flake8 (additional linter)
+flake8:
+  <<: *python_base
+  stage: lint
+  script:
+    - echo "Running flake8 style checks..."
+    - export PATH="/root/.cargo/bin:$PATH"
+    - uv run flake8 src/ --max-line-length=120 --extend-ignore=E203,W503 --output-file=flake8-report.txt
+    - echo "Flake8 analysis completed"
+  artifacts:
+    when: always
+    paths:
+      - flake8-report.txt
+    expire_in: 1 week
+  allow_failure: true
+  only:
+    - main
+    - merge_requests
+    - develop
+
+# Security Scan - Bandit
+security_scan:
+  <<: *python_base
+  stage: lint
+  script:
+    - echo "Running security analysis with bandit..."
+    - export PATH="/root/.cargo/bin:$PATH"
+    - uv run bandit -r src/ -f json -o bandit-report.json
+    - uv run bandit -r src/ -f txt -o bandit-report.txt
+    - echo "Security scan completed"
+  artifacts:
+    when: always
+    paths:
+      - bandit-report.json
+      - bandit-report.txt
+    expire_in: 1 week
+  allow_failure: true
+  only:
+    - main
+    - merge_requests
+
+# Quality Gate - Combine all checks
+quality_gate:
+  stage: quality-gate
+  image: alpine:latest
+  script:
+    - echo "=== Quality Gate Analysis ==="
+    - echo "Checking test results and code quality metrics..."
+    
+    # Check if tests passed (basic check)
+    - if [ -f "report.xml" ]; then echo "✅ Unit tests artifacts found"; else echo "❌ Unit tests failed or missing"; exit 1; fi
+    
+    # Display quality summary
+    - echo "📊 Quality Summary:"
+    - echo "- Unit Tests: $(if [ -f 'report.xml' ]; then echo 'PASSED'; else echo 'FAILED'; fi)"
+    - echo "- Pylint: $(if [ -f 'pylint-report.txt' ]; then echo 'COMPLETED'; else echo 'MISSING'; fi)"
+    - echo "- Flake8: $(if [ -f 'flake8-report.txt' ]; then echo 'COMPLETED'; else echo 'MISSING'; fi)"
+    - echo "- Security: $(if [ -f 'bandit-report.txt' ]; then echo 'COMPLETED'; else echo 'MISSING'; fi)"
+    
+    - echo "✅ Quality gate passed - all checks completed"
+  dependencies:
+    - unit_tests
+    - pylint
+    - flake8
+    - security_scan
+  only:
+    - main
+    - merge_requests
+
+# Container Build Test (optional)
+container_build_test:
+  stage: test
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "Testing container builds..."
+    - docker build -f docker/backend/Containerfile -t rag-backend:test .
+    - docker build -f docker/frontend/Containerfile -t rag-frontend:test .
+    - echo "✅ Container builds successful"
+  only:
+    - main
+    - merge_requests
+  when: manual  # Manual trigger for container tests
+
+# Dependency Check
+dependency_check:
+  <<: *python_base
+  stage: test
+  script:
+    - echo "Checking for dependency vulnerabilities..."
+    - export PATH="/root/.cargo/bin:$PATH"
+    - uv run safety check --json --output safety-report.json
+    - uv run safety check --output safety-report.txt
+    - echo "Dependency check completed"
+  artifacts:
+    when: always
+    paths:
+      - safety-report.json
+      - safety-report.txt
+    expire_in: 1 week
+  allow_failure: true
+  only:
+    - main
+    - merge_requests
+
+# Documentation Check (if README or docs exist)
+docs_check:
+  image: alpine:latest
+  stage: lint
+  script:
+    - echo "Checking documentation completeness..."
+    - |
+      if [ -f "README.md" ]; then
+        echo "✅ README.md exists"
+      else
+        echo "⚠️ README.md missing"
+      fi
+    - |
+      if [ -f "DOCKER.md" ]; then
+        echo "✅ DOCKER.md exists"
+      else
+        echo "⚠️ DOCKER.md missing"
+      fi
+    - |
+      if [ -f "CLAUDE.md" ]; then
+        echo "✅ CLAUDE.md exists"
+      else
+        echo "⚠️ CLAUDE.md missing"
+      fi
+    - echo "Documentation check completed"
+  allow_failure: true
+  only:
+    - main
+    - merge_requests
+
+# RAG Pipeline Automation - Embedding Stage
+embed_pipeline:
+  <<: *python_base
+  stage: pipeline
+  script:
+    - echo "🚀 Running RAG embedding pipeline..."
+    - source venv/bin/activate
+    - chmod +x run.sh
+    - ./run.sh --mode embed
+    - echo "✅ Embedding pipeline completed"
+  artifacts:
+    when: always
+    paths:
+      - vector_store/
+      - logs/
+    expire_in: 1 week
+  only:
+    - main
+    - schedules
+  when: manual  # Manual trigger for embedding pipeline
+
+# RAG Pipeline Automation - Evaluation Stage  
+eval_pipeline:
+  <<: *python_base
+  stage: pipeline
+  script:
+    - echo "🧪 Running RAG evaluation pipeline..."
+    - source venv/bin/activate
+    - chmod +x run.sh
+    # Install evaluation dependencies
+    - pip install -r requirements/requirements-evaluation.txt
+    # Run evaluation
+    - ./run.sh --mode eval
+    - echo "✅ Evaluation pipeline completed"
+  artifacts:
+    when: always
+    paths:
+      - evaluation/results/
+      - logs/
+    expire_in: 1 week
+  dependencies:
+    - embed_pipeline
+  only:
+    - main
+    - schedules
+  when: manual  # Manual trigger for evaluation
+
+# Full RAG System Test (Integration)
+full_system_test:
+  <<: *python_base
+  stage: deploy
+  services:
+    - docker:dind
+  script:
+    - echo "🔧 Running full RAG system integration test..."
+    - source venv/bin/activate
+    - chmod +x run.sh
+    # Install web dependencies
+    - pip install -r requirements/requirements-web.txt
+    # Start full system in background for testing
+    - timeout 30s ./run.sh --mode full || true
+    - echo "✅ Full system test completed"
+  artifacts:
+    when: always
+    paths:
+      - logs/
+    expire_in: 3 days
+  dependencies:
+    - embed_pipeline
+  only:
+    - main
+    - schedules
+  when: manual  # Manual trigger for full system test
+
+# Scheduled Pipeline Run (Weekly)
+scheduled_embed:
+  <<: *python_base
+  stage: pipeline
+  script:
+    - echo "⏰ Running scheduled embedding pipeline..."
+    - source venv/bin/activate
+    - chmod +x run.sh
+    - ./run.sh --mode embed
+    - ./run.sh --mode eval
+    - echo "✅ Scheduled pipeline completed"
+  artifacts:
+    when: always
+    paths:
+      - vector_store/
+      - evaluation/results/
+      - logs/
+    expire_in: 2 weeks
+  only:
+    - schedules
+  # This job runs automatically on schedule

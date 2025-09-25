@@ -1,0 +1,81 @@
+# @package _global_
+# Main Hydra configuration for RAG System
+
+defaults:
+  - llm: ollama_llama3
+  - embeddings: bge_large
+  - prompts: default_rag
+  - vectordb: chroma_default
+  - observability: langfuse_default
+  - optuna: optuna_default
+  - evaluation: evaluation_default
+  - api: api_default
+  - _self_
+
+# Device configuration
+device: mps  # options: "cpu", "cuda", "mps", or "auto"
+
+# Global settings
+seed: 42
+
+# Document Processing Configuration
+document_processing:
+  # Resource directories for each document type
+  resource_dirs:
+    html: "corpus/html"
+    pdf: "corpus/pdf" 
+    docx: "corpus/docx"
+    csv: "corpus/csv"
+    audio: "corpus/audio"
+    images: "corpus/images"
+  
+  # Chunk sizes for different document types (in characters)
+  # Optimized via Optuna hyperparameter tuning (Trial 50: Score 0.4395)
+  chunk_sizes:
+    pdf: 1100      # Optuna-optimized: moderate chunks for dense content
+    docx: 800      # Similar to PDF  
+    html: 1700     # Optuna-optimized: larger chunks for web content structure
+    csv: 400       # Rows are typically short, keep smaller
+    audio: 600     # 30-second segments, moderate size
+  
+  # Chunk overlap - optimized via Optuna
+  chunk_overlap: 50  # Minimal overlap for clean boundaries
+  
+  # Content enhancement settings
+  content_enhancement:
+    pdf:
+      include_headings: true
+      include_page_context: true
+      min_content_length: 100
+    csv:
+      max_content_length: 300  # Limit CSV row content
+      require_meaningful_content: true
+    html:
+      preserve_structure: true
+      include_metadata: true
+  
+  # Audio processing settings
+  audio:
+    whisper_model: "medium"          # Whisper model: small, medium, large
+    segmentation_method: "smart"     # Segmentation: smart, fixed
+    min_segment_length: 5            # Minimum segment duration in seconds
+    max_segment_length: 45           # Maximum segment duration in seconds
+    post_process_transcript: true    # Clean up transcripts
+    remove_filler_words: true        # Remove um, uh, like, etc.
+  
+  # Query preprocessing
+  query_preprocessing:
+    expand_acronyms: true
+    normalize_text: true
+    boost_document_terms: true
+
+# RAG Pipeline Configuration - Optuna Optimized
+# Retrieval settings (optimized via hyperparameter tuning)
+retrieval:
+  default_k: 8              # Optuna-optimized: retrieve 8 documents for balanced context
+  similarity_threshold: 0.4  # Moderate selectivity for relevance filtering
+  
+# Generation settings (optimized via hyperparameter tuning)  
+generation:
+  temperature: 0.2    # Low temperature for consistent, factual responses
+  max_tokens: 832     # Moderate response length for comprehensive answers

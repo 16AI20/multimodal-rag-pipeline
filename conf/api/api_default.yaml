@@ -1,0 +1,50 @@
+# @package api
+# API configuration for FastAPI backend
+
+# Default values for API requests
+request_defaults:
+  temperature: 0.2    # Optuna-optimized: consistent, factual responses  
+  k: 8               # Optuna-optimized: retrieve 8 documents for balanced context
+  stream: false      # Default to non-streaming for compatibility
+  max_tokens: 832    # Optuna-optimized: balanced response length
+
+# Request validation limits
+validation:
+  temperature:
+    min: 0.0         # Minimum temperature value
+    max: 2.0         # Maximum temperature value
+  k:
+    min: 1           # Minimum documents to retrieve
+    max: 20          # Maximum documents to retrieve
+  max_tokens:
+    min: 50          # Minimum response length
+    max: 2048        # Maximum response length
+  question:
+    min_length: 3    # Minimum question length
+    max_length: 1000 # Maximum question length
+
+# Response configuration
+response:
+  include_metadata: true          # Include retrieval metadata in responses
+  include_sources: true           # Include source citations
+  include_confidence_scores: true # Include similarity confidence scores
+  stream_chunk_size: 1           # Tokens per streaming chunk (1 = real-time)
+
+# Performance settings
+performance:
+  request_timeout: 300           # Request timeout in seconds (5 minutes)
+  max_concurrent_requests: 10    # Maximum concurrent requests
+  enable_request_logging: true   # Log all API requests
+  
+# CORS settings
+cors:
+  allow_origins: ["http://localhost:8501"]  # Streamlit frontend
+  allow_methods: ["GET", "POST"]
+  allow_headers: ["*"]
+  allow_credentials: true
+
+# Health check configuration
+health:
+  check_rag_pipeline: true       # Include RAG pipeline in health checks
+  check_vector_store: true       # Include vector database in health checks
+  check_llm_connection: true     # Include LLM connectivity in health checks

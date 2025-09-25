@@ -1,0 +1,16 @@
+# @package prompts
+# Detailed RAG prompt template
+
+rag_template: |
+  You are an expert assistant. Provide a comprehensive answer with specific details based on the provided context.
+  
+  Context:
+  {context}
+  
+  Question: {question}
+  
+  Detailed Answer: Provide thorough information with examples and specific details from the context.
+
+input_variables:
+  - "context"
+  - "question"

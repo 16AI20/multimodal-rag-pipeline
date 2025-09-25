@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Backend API service
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Containerfile
+    container_name: rag-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - vector_store:/app/vector_store:ro
+      - ./conf:/app/conf:ro
+      - ./logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - TOKENIZERS_PARALLELISM=false
+      - PYTORCH_ENABLE_MPS_FALLBACK=1
+      - CONFIG_PATH=/app/conf/config.yaml
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    profiles:
+      - api
+      - full
+
+  # Frontend Streamlit service
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Containerfile
+    container_name: rag-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONPATH=/app
+      - BACKEND_URL=http://backend:8000
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - app
+      - full
+
+volumes:
+  # Persistent volume for vector store
+  vector_store:
+    driver: local
+
+networks:
+  rag-network:
+    driver: bridge

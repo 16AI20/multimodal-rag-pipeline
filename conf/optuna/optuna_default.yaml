@@ -1,0 +1,171 @@
+# @package optuna
+# Optuna hyperparameter tuning configuration for RAG pipeline
+
+enabled: true  # Set to true to enable hyperparameter tuning
+
+# Optuna study configuration
+study:
+  study_name: "rag_optimization"
+  direction: "maximize"  # maximize objective score
+  storage: "sqlite:///hyperparameter_studies.db"  # Local SQLite storage
+  load_if_exists: true
+  
+  # Multi-objective optimization (optional)
+  multi_objective: false
+  objectives:
+    - name: "rouge_l_score"
+      direction: "maximize"
+      weight: 0.4
+    - name: "semantic_similarity" 
+      direction: "maximize"
+      weight: 0.4
+    - name: "response_time"
+      direction: "minimize"
+      weight: 0.2
+
+# Trial configuration
+trials:
+  n_trials: 50  # Number of trials to run
+  timeout: 3600  # Maximum time in seconds (1 hour)
+  n_jobs: 1  # Parallel trials (set to 1 for LLM to avoid conflicts)
+  
+  # Pruning configuration
+  pruning:
+    enabled: true
+    patience: 10  # Stop trial early if no improvement
+
+# Parameter search spaces
+parameters:
+  # Retrieval parameters
+  retrieval:
+    k:
+      type: "int"
+      low: 3
+      high: 15
+      step: 1
+      
+    chunk_size_pdf:
+      type: "int" 
+      low: 500
+      high: 2000
+      step: 100
+      
+    chunk_size_html:
+      type: "int"
+      low: 800
+      high: 2500
+      step: 100
+      
+    chunk_overlap:
+      type: "int"
+      low: 50
+      high: 200
+      step: 25
+      
+    similarity_threshold:
+      type: "float"
+      low: 0.0
+      high: 0.8
+      step: 0.1
+      
+    reranking_enabled:
+      type: "categorical"
+      choices: [true, false]
+      
+    reranking_top_k:
+      type: "int"
+      low: 10
+      high: 30
+      step: 5
+      condition: "reranking_enabled == true"
+  
+  # Generation parameters  
+  generation:
+    temperature:
+      type: "float"
+      low: 0.1
+      high: 1.0
+      step: 0.1
+      
+    max_tokens:
+      type: "int"
+      low: 256
+      high: 1024
+      step: 64
+      
+    top_p:
+      type: "float" 
+      low: 0.8
+      high: 0.95
+      step: 0.05
+
+# Evaluation configuration
+evaluation:
+  # Which evaluation methods to use for objective
+  methods:
+    bleu_rouge: true
+    chatgpt_comparison: true
+    response_time: true
+  
+  # Evaluation data
+  bleu_rouge_file: "evaluation/bleu_rouge_answers.json"
+  chatgpt_file: "evaluation/chatgpt_comparison_answers.json"
+  
+  # Objective function weights
+  objective_weights:
+    rouge_l_f1: 0.3
+    bleu_score: 0.2
+    semantic_similarity: 0.3
+    response_time_penalty: 0.2  # Penalize slow responses
+  
+  # Performance constraints
+  constraints:
+    max_response_time: 30.0  # seconds
+    min_rouge_score: 0.1
+    min_bleu_score: 0.05
+
+# Advanced settings
+advanced:
+  # Subset of questions for faster tuning (use all if null)
+  question_subset: null  # or integer like 20 for first 20 questions
+  
+  # Caching
+  cache_embeddings: true
+  cache_retrievals: true
+  
+  # Logging
+  log_level: "INFO"
+  save_failed_trials: true
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 15  # Stop if no improvement for 15 trials
+    min_improvement: 0.01  # Minimum improvement threshold
+    
+# Results configuration  
+results:
+  # Where to save results
+  output_dir: "hyperparameter_results"
+  
+  # Best trial configuration export
+  export_best_config: true
+  config_output_path: "conf/tuned_config.yaml"
+  
+  # Visualization
+  generate_plots: true
+  plot_formats: ["png", "html"]
+  
+  # Reporting
+  generate_report: true
+  report_format: "markdown"
+
+# Fixed parameters (not tuned)
+fixed_parameters:
+  device: "mps"  # Keep device consistent
+  seed: 42  # Keep seed for reproducibility during tuning
+  
+  # Model choices (could be tuned later)
+  llm_provider: "ollama" 
+  llm_model: "llama3.1:8b"
+  embedding_model: "BAAI/bge-large-en-v1.5"

@@ -1,0 +1,292 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rag-pipeline-system"
+version = "1.0.0"
+description = "General-purpose RAG (Retrieval-Augmented Generation) system for locally-deployable document processing and intelligent Q&A"
+authors = [
+    {name = "RAG Pipeline Team", email = "team@rag-system.local"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Indexing",
+]
+keywords = ["rag", "retrieval", "augmented-generation", "nlp", "ai", "machine-learning", "vector-search", "document-processing"]
+
+# Core dependencies required for all installations
+dependencies = [
+    # Core Python packages
+    "torch>=2.0.0",
+    "numpy>=1.21.0",
+    "pyyaml>=6.0",
+    "requests>=2.28.0",
+    "pathlib2>=2.3.7",
+    
+    # Configuration management  
+    "hydra-core>=1.3.0",
+    "omegaconf>=2.3.0",
+    
+    # LangChain core
+    "langchain>=0.1.0",
+    "langchain-huggingface>=0.0.3", 
+    "langchain-chroma>=0.1.0",
+    "langchain-community>=0.0.20",
+    
+    # Vector database
+    "chromadb>=0.4.0",
+    
+    # Data validation
+    "pydantic>=2.0.0",
+    
+    # Observability (optional but included in core)
+    "langfuse>=2.0.0",
+    
+    # Hyperparameter tuning (optional but included in core)
+    "optuna>=3.0.0",
+]
+
+[project.optional-dependencies]
+# Web services (backend and frontend)
+web = [
+    "langchain-ollama>=0.1.0",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.22.0",
+    "python-multipart>=0.0.6",
+    "streamlit>=1.28.0",
+    "plotly>=5.15.0",
+    "pandas>=1.5.0",
+    "transformers>=4.30.0",
+]
+
+# Backend API with enhanced ML features
+backend = [
+    "sentence-transformers>=2.2.0",
+    "transformers>=4.30.0", 
+    "beautifulsoup4>=4.11.0",
+]
+
+# Full ML and document processing capabilities
+ml = [
+    # Document processing
+    "beautifulsoup4>=4.11.0",
+    "pandas>=1.5.0",
+    "unstructured>=0.10.0",
+    "python-docx>=0.8.11",
+    "PyPDF2>=3.0.0",
+    
+    # Audio processing
+    "openai-whisper",
+    "torchaudio>=2.0.0",
+    
+    # Image processing
+    "Pillow>=9.0.0", 
+    "opencv-python>=4.7.0",
+    
+    # ML/AI models and transformers
+    "transformers>=4.30.0",
+    "sentence-transformers>=2.2.0",
+]
+
+# Evaluation framework
+evaluation = [
+    # BLEU/ROUGE metrics
+    "nltk>=3.8",
+    "rouge-score>=0.1.2",
+    
+    # Semantic similarity
+    "sentence-transformers>=2.2.0",
+    
+    # RAGAS - RAG Assessment framework
+    "ragas>=0.1.0",
+    "datasets>=2.14.0",
+    
+    # Additional ML utilities
+    "scikit-learn>=1.3.0",
+]
+
+# Development tools
+dev = [
+    # Core testing framework
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    
+    # Code quality and linting
+    "pylint>=2.17.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    
+    # Security scanning
+    "bandit>=1.7.5",
+    "safety>=2.3.0",
+    
+    # Additional testing utilities
+    "coverage>=7.2.0",
+    "pytest-xdist>=3.3.0",  # Parallel test execution
+    "pytest-html>=3.2.0",   # HTML test reports
+]
+
+# Production monitoring
+monitoring = [
+    # Prometheus metrics collection
+    "prometheus-client>=0.17.0",
+    
+    # System metrics monitoring
+    "psutil>=5.9.0",
+    
+    # Async utilities
+    "aiofiles>=23.0.0",
+    
+    # Optional external monitoring (commented out by default)
+    # "sentry-sdk>=1.32.0",  # Error tracking
+    # "datadog>=0.44.0",     # APM 
+    # "newrelic>=8.0.0",     # Monitoring platform
+]
+
+# Convenience groupings
+all = [
+    # Include all optional dependencies except monitoring
+    # (monitoring should be explicit choice)
+]
+
+# Full installation with everything including monitoring
+full = [
+    # This will include all dependencies
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/rag-pipeline-system"
+Documentation = "https://github.com/your-org/rag-pipeline-system/blob/main/README.md"
+Repository = "https://github.com/your-org/rag-pipeline-system.git"
+Issues = "https://github.com/your-org/rag-pipeline-system/issues"
+
+[project.scripts]
+# CLI entry points for the RAG system
+rag-embed = "src.embedders.main_embedder:main"
+rag-eval = "src.evaluation.rag_evaluator:main"
+rag-report = "src.reports.report_generator:main"
+rag-tune = "src.optuna.run_tuning:main"
+
+[tool.uv]
+# uv-specific configuration
+dev-dependencies = [
+    # Development dependencies managed by uv
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "pylint>=2.17.0",
+    "flake8>=6.0.0",
+]
+
+[tool.black]
+# Code formatting configuration
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # Directories to exclude
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | vector_store
+  | logs
+)/
+'''
+
+[tool.pylint.messages_control]
+# Disable specific pylint warnings
+disable = [
+    "C0103",  # Invalid name
+    "R0903",  # Too few public methods
+    "R0913",  # Too many arguments
+    "W0613",  # Unused argument
+    "C0114",  # Missing module docstring
+]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pytest.ini_options]
+# Test configuration
+testpaths = ["src/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src",
+    "--cov-report=term-missing", 
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "-v",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+# Coverage configuration
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+# Coverage reporting
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
+]
+
+[tool.bandit]
+# Security scanning configuration
+exclude_dirs = ["tests", "vector_store", "logs", ".venv", "venv"]
+skips = ["B101"]  # Skip assert_used test
+
+[tool.isort]
+# Import sorting configuration
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 120
+
+[tool.mypy]
+# Type checking configuration (if using mypy in the future)
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Set to true when ready for strict typing
+ignore_missing_imports = true

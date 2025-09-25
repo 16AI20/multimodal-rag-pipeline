@@ -1,0 +1,91 @@
+# @package observability
+# Langfuse observability configuration for RAG pipeline
+
+enabled: false  # Set to true when Langfuse is available
+
+# Connection settings (for self-hosted Langfuse)
+host: "http://localhost:3000"  # Change to your Langfuse server URL
+public_key: ""  # Set via environment variable LANGFUSE_PUBLIC_KEY
+secret_key: ""  # Set via environment variable LANGFUSE_SECRET_KEY
+
+# Tracking configuration
+tracking:
+  # What to track
+  queries: true
+  retrievals: true
+  generations: true
+  embeddings: true
+  errors: true
+  
+  # Performance metrics
+  track_tokens: true
+  track_latency: true
+  track_costs: true
+  
+  # Session management
+  session_tracking: true
+  user_feedback: true
+
+# Sampling (to reduce volume if needed)
+sampling:
+  enabled: false
+  rate: 1.0  # 1.0 = track everything, 0.1 = track 10%
+
+# Custom tags and metadata
+tags:
+  project: "rag-system"
+  environment: "development"  # development, staging, production
+  version: "1.0.0"
+
+# Advanced settings
+advanced:
+  # Batch settings for performance
+  batch_size: 10
+  flush_interval: 5  # seconds
+  
+  # Retry settings
+  max_retries: 3
+  timeout: 10  # seconds
+  
+  # Debug mode
+  debug: false
+  
+  # PII filtering (remove sensitive data)
+  filter_pii: true
+  
+# What metrics to calculate
+metrics:
+  # Retrieval metrics
+  retrieval_precision: true
+  retrieval_recall: true
+  mrr: true  # Mean Reciprocal Rank
+  
+  # Generation metrics
+  response_length: true
+  response_time: true
+  token_usage: true
+  
+  # Quality metrics (if available)
+  semantic_similarity: true
+  sentiment_score: false
+  safety_score: true
+
+# Custom evaluation criteria for general RAG content
+rag_specific:
+  # Track domain-agnostic metrics
+  track_question_categories: true
+  track_source_distribution: true
+  track_technical_accuracy: true
+  
+  # General question categories for analysis
+  categories:
+    - "factual_questions"
+    - "conceptual_questions" 
+    - "procedural_questions"
+    - "comparative_questions"
+    - "analytical_questions"
+    - "definition_questions"
+    - "example_questions"
+    - "troubleshooting_questions"
+    - "best_practices"
+    - "implementation_details"

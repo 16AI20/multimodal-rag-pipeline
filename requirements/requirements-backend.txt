@@ -1,0 +1,10 @@
+# Backend-specific dependencies for RAG pipeline
+-r requirements.txt
+-r requirements-web.txt
+
+# ML models for RAG pipeline (no audio/image processing)
+sentence-transformers>=2.2.0
+transformers>=4.30.0
+
+# Document processing (minimal - only what RAG needs)
+beautifulsoup4>=4.11.0

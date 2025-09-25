@@ -1,0 +1,9 @@
+# @package llm
+# Ollama LLaMA 3.1 configuration
+
+provider: "ollama"
+model: "llama3.1:8b"
+base_url: "http://localhost:11434"
+# Optuna-optimized parameters (Trial 50: Score 0.4395)
+temperature: 0.2    # Low temperature for consistent, factual educational responses
+max_tokens: 832     # Balanced response length for comprehensive answers

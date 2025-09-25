@@ -1,0 +1,10 @@
+# @package embeddings
+# BGE Large embedding model configuration
+
+model: "BAAI/bge-large-en-v1.5"
+device: "mps"  # Use MPS with sparse tensor fixes enabled
+
+# Reranking configuration (disabled by default)
+reranking_enabled: false
+reranking_model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+reranking_top_k: 15
